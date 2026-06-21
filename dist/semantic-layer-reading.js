@@ -27,7 +27,7 @@ function escapeHtml(value) {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
 }
-function clampText(value, maxLength = 180) {
+function clampText(value, maxLength = 220) {
     const normalized = value.replace(/\s+/g, " ").trim();
     return normalized.length > maxLength ? `${normalized.slice(0, maxLength)}…` : normalized;
 }
@@ -55,14 +55,14 @@ function getSentenceSegments(text) {
     }
     return segments.length > 0 ? segments : [{ text, start: 0, end: text.length }];
 }
-function addSpan(spans, candidate) {
-    if (candidate.end <= candidate.start)
-        return;
-    if (!currentText.slice(candidate.start, candidate.end).trim())
-        return;
-    const overlaps = spans.some((span) => candidate.start < span.end && candidate.end > span.start);
-    if (!overlaps)
-        spans.push(candidate);
+function trimRange(text, absoluteStart, absoluteEnd) {
+    let start = absoluteStart;
+    let end = absoluteEnd;
+    while (start < end && /\s/.test(text[start] ?? ""))
+        start += 1;
+    while (end > start && /\s/.test(text[end - 1] ?? ""))
+        end -= 1;
+    return { start, end };
 }
 function findMainVerb(segment) {
     const verbPatterns = [
@@ -87,16 +87,35 @@ function findMainVerb(segment) {
     });
     return best;
 }
-function trimRange(text, absoluteStart, absoluteEnd) {
-    let start = absoluteStart;
-    let end = absoluteEnd;
-    while (start < end && /\s/.test(text[start] ?? ""))
-        start += 1;
-    while (end > start && /\s/.test(text[end - 1] ?? ""))
-        end -= 1;
-    return { start, end };
+function hasSameSpan(spans, candidate) {
+    return spans.some((span) => span.start === candidate.start && span.end === candidate.end && span.role === candidate.role);
 }
-function cutSubjectBeforeModifier(subjectText) {
+function isBlockedByPrimarySpan(spans, candidate) {
+    return spans.some((span) => {
+        const overlaps = candidate.start < span.end && candidate.end > span.start;
+        if (!overlaps)
+            return false;
+        if (candidate.role === "range" || span.role === "range")
+            return true;
+        if (candidate.role === "modifier" && span.role === "modifier")
+            return true;
+        if (candidate.role === "subject" || candidate.role === "verb" || candidate.role === "object")
+            return false;
+        return span.role === "subject" || span.role === "verb" || span.role === "object";
+    });
+}
+function addSpan(spans, candidate) {
+    if (candidate.end <= candidate.start)
+        return;
+    if (!currentText.slice(candidate.start, candidate.end).trim())
+        return;
+    if (hasSameSpan(spans, candidate))
+        return;
+    if (isBlockedByPrimarySpan(spans, candidate))
+        return;
+    spans.push(candidate);
+}
+function cutSubjectBeforePostModifier(subjectText) {
     const modifierMatch = /\s(?:from|under|within|during|after|before|with|without|according\s+to|in|of|for|by)\s/i.exec(subjectText);
     return modifierMatch ? modifierMatch.index : subjectText.length;
 }
@@ -122,10 +141,10 @@ function detectCoreSpans(segment, spans) {
     const verbStart = segment.start + verb.index;
     const verbEnd = verbStart + verb.text.length;
     const rawSubject = segment.text.slice(0, verb.index);
-    const subjectCut = cutSubjectBeforeModifier(rawSubject);
+    const subjectCut = cutSubjectBeforePostModifier(rawSubject);
     const subjectRange = trimRange(currentText, segment.start, segment.start + subjectCut);
-    addSpan(spans, { start: subjectRange.start, end: subjectRange.end, layer: 1, role: "subject", subtype: "main-subject", tooltip: "Chủ ngữ chính được rule-based detector xác định gần đúng." });
-    addSpan(spans, { start: verbStart, end: verbEnd, layer: 1, role: "verb", subtype: "main-verb", tooltip: "Động từ/cụm động từ chính được rule-based detector xác định gần đúng." });
+    addSpan(spans, { start: subjectRange.start, end: subjectRange.end, revealLayer: 1, role: "subject", subtype: "main-subject", tooltip: "Chủ ngữ chính. Đây là thành phần lõi của câu." });
+    addSpan(spans, { start: verbStart, end: verbEnd, revealLayer: 1, role: "verb", subtype: "main-verb", tooltip: "Động từ/cụm động từ chính. Đây là trục hành động của câu." });
     const objectLocalStart = skipLeadingDelimitedModifiers(segment.text, verb.index + verb.text.length);
     if (objectLocalStart >= segment.text.length)
         return;
@@ -133,9 +152,9 @@ function detectCoreSpans(segment, spans) {
     const boundary = /\s(?:of|in|from|under|within|during|after|before|with|without|according\s+to|for|by)\s|[.;!?]/i.exec(objectTail);
     const objectLocalEnd = objectLocalStart + (boundary ? boundary.index : objectTail.length);
     const objectRange = trimRange(currentText, segment.start + objectLocalStart, segment.start + objectLocalEnd);
-    addSpan(spans, { start: objectRange.start, end: objectRange.end, layer: 1, role: "object", subtype: "main-object-or-complement", tooltip: "Tân ngữ hoặc bổ ngữ chính sau động từ, xác định bằng rule gần đúng." });
+    addSpan(spans, { start: objectRange.start, end: objectRange.end, revealLayer: 1, role: "object", subtype: "main-object-or-complement", tooltip: "Tân ngữ hoặc bổ ngữ chính sau động từ. Đây vẫn thuộc câu lõi." });
 }
-function addRegexSpan(spans, segment, regex, role, layer, subtype, tooltip, groupIndex = 0) {
+function addRegexSpan(spans, segment, regex, role, revealLayer, subtype, tooltip, groupIndex = 0) {
     let match;
     const localRegex = new RegExp(regex.source, regex.flags.includes("g") ? regex.flags : `${regex.flags}g`);
     while ((match = localRegex.exec(segment.text)) !== null) {
@@ -144,15 +163,14 @@ function addRegexSpan(spans, segment, regex, role, layer, subtype, tooltip, grou
         const start = segment.start + match.index + Math.max(localOffset, 0);
         const end = start + matchedText.length;
         const range = trimRange(currentText, start, end);
-        addSpan(spans, { start: range.start, end: range.end, layer, role, subtype, tooltip });
+        addSpan(spans, { start: range.start, end: range.end, revealLayer, role, subtype, tooltip });
     }
 }
 function detectModifierSpans(segment, spans) {
-    addRegexSpan(spans, segment, /(?:^|[,;])\s*(from\b[\s\S]+?\bto\b[^,.!?;]*)/gi, "range", 4, "from-a-to-b-range", "Quan hệ phạm vi: cấu trúc from A to B, thường hiểu là trải từ nhóm ý A đến nhóm ý B.", 1);
+    addRegexSpan(spans, segment, /(?:^|[,;])\s*(from\b[\s\S]+?\bto\b[^,.!?;]*)/gi, "range", 4, "from-a-to-b-range", "Quan hệ phạm vi: cấu trúc from A to B. Đây là quan hệ cấu trúc lớn, không phải bổ nghĩa thông thường.", 1);
     addRegexSpan(spans, segment, /\bfrom\b[\s\S]+?(?=\s+\b(?:began|begin|begins|started|starts|may|can|could|should|must|will|would|is|are|was|were|has|have|had|suggested|said|announced|reported)\b)/gi, "modifier", 2, "source-modifier", "Cụm bổ nghĩa nguồn gốc/xuất xứ cho thành phần đứng trước.");
     addRegexSpan(spans, segment, /,\s*(in\s+[^,]+?terms)\s*,/gi, "modifier", 2, "manner-modifier", "Cụm bổ nghĩa cách thức hoặc mức độ cho hành động chính.", 1);
-    addRegexSpan(spans, segment, /\bof\s+[^,.!?;]+?(?=\s+\bin\b|[,.;!?]|$)/gi, "modifier", 3, "of-phrase-modifier", "Cụm of-phrase bổ nghĩa sở thuộc/phạm vi cho danh từ đứng trước.");
-    addRegexSpan(spans, segment, /\bin\s+the\s+new\s+era\b/gi, "modifier", 3, "context-modifier", "Cụm bổ nghĩa bối cảnh thời đại.");
+    addRegexSpan(spans, segment, /\bof\s+[^,.!?;]+?(?=,|;|\.|\?|!|$)/gi, "modifier", 2, "post-nominal-modifier", "Cụm bổ nghĩa hậu vị cho danh từ đứng trước. Nếu bên trong có cụm khác như in the new era, phần đó được giải thích ở Layer 3 như thao tác zoom.");
     addRegexSpan(spans, segment, /\b(?:under|within|during|after|before|with|without|according\s+to|for|by)\b[^,.!?;]*/gi, "modifier", 2, "prepositional-modifier", "Cụm giới từ bổ nghĩa cho câu hoặc thành phần đứng trước.");
 }
 function detectHighlightSpans(text) {
@@ -165,7 +183,7 @@ function detectHighlightSpans(text) {
     return spans.sort((a, b) => a.start - b.start || a.end - b.end);
 }
 function renderTooltip(span) {
-    return `<span class="tooltip"><strong>${escapeHtml(getRoleLabel(span.role))}</strong><br>${escapeHtml(span.tooltip)}<span class="synonyms"><strong>Subtype:</strong> ${escapeHtml(span.subtype)} · Layer ${span.layer}</span></span>`;
+    return `<span class="tooltip"><strong>${escapeHtml(getRoleLabel(span.role))}</strong><br>${escapeHtml(span.tooltip)}<span class="synonyms"><strong>Subtype:</strong> ${escapeHtml(span.subtype)} · Hiện từ Layer ${span.revealLayer}</span></span>`;
 }
 function renderHighlightedSentence(text, spans) {
     const sorted = spans.slice().sort((a, b) => a.start - b.start || b.end - a.end);
@@ -175,7 +193,7 @@ function renderHighlightedSentence(text, spans) {
         if (span.start < cursor || span.end > text.length)
             return;
         html += escapeHtml(text.slice(cursor, span.start));
-        html += `<span class="hl ${span.role}" data-min-layer="${span.layer}" data-subtype="${escapeHtml(span.subtype)}">${escapeHtml(text.slice(span.start, span.end))}${renderTooltip(span)}</span>`;
+        html += `<span class="hl ${span.role}" data-min-layer="${span.revealLayer}" data-subtype="${escapeHtml(span.subtype)}">${escapeHtml(text.slice(span.start, span.end))}${renderTooltip(span)}</span>`;
         cursor = span.end;
     });
     html += escapeHtml(text.slice(cursor));
@@ -184,19 +202,7 @@ function renderHighlightedSentence(text, spans) {
 function getActiveSemanticTermEntries(text) {
     const lowerText = text.toLowerCase();
     return semanticTermCatalog.filter((item) => lowerText.includes(item.term.toLowerCase()));
-}
-function renderFlowNodes(parts) {
-    return parts.map((part, index) => {
-        const node = `<span class="node">${escapeHtml(part)}</span>`;
-        return index === 0 ? node : `<span class="arrow">→</span>${node}`;
-    }).join("");
-}
-function renderSpanList(spans, emptyText) {
-    if (spans.length === 0)
-        return `<p class="muted">${emptyText}</p>`;
-    return `<ul>${spans.map((span) => `<li><strong>${escapeHtml(currentText.slice(span.start, span.end))}</strong>: ${escapeHtml(getRoleLabel(span.role))} · <small>${escapeHtml(span.subtype)}</small></li>`).join("")}</ul>`;
-}
-function renderPatternTags(types, getPattern) {
+}\nfunction renderPatternTags(types, getPattern) {
     return types.map((type) => {
         const pattern = getPattern(type);
         return `<span class="tag" title="${escapeHtml(pattern.grammarName)}: ${escapeHtml(pattern.pattern)}">${escapeHtml(pattern.vietnameseName)}</span>`;
@@ -215,6 +221,40 @@ function renderDetectedPatternTags() {
     ];
     return allTags.join("") || `<span class="muted">Chưa phát hiện pattern rõ.</span>`;
 }
+function renderSpanList(spans, emptyText) {
+    if (spans.length === 0)
+        return `<p class="muted">${emptyText}</p>`;
+    return `<ul>${spans.map((span) => `<li><strong>${escapeHtml(currentText.slice(span.start, span.end))}</strong>: ${escapeHtml(getRoleLabel(span.role))} · <small>${escapeHtml(span.subtype)}</small></li>`).join("")}</ul>`;
+}
+function splitModifierForZoom(modifier) {
+    const trimmed = modifier.trim();
+    const lower = trimmed.toLowerCase();
+    if (lower.startsWith("of ") && /\bin\s+the\s+new\s+era\b/i.test(trimmed)) {
+        const match = /^(of\s+)([\s\S]+?)(\s+in\s+the\s+new\s+era)$/i.exec(trimmed);
+        if (match)
+            return [match[1].trim(), match[2].trim(), match[3].trim()];
+    }
+    if (lower.startsWith("of "))
+        return ["of", trimmed.slice(3).trim()];
+    if (lower.startsWith("in "))
+        return ["in", trimmed.slice(3).trim()];
+    if (lower.startsWith("from "))
+        return ["from", trimmed.slice(5).trim()];
+    const prep = /^(under|within|during|after|before|with|without|according\s+to|for|by)\s+([\s\S]+)$/i.exec(trimmed);
+    if (prep)
+        return [prep[1], prep[2]];
+    return [trimmed];
+}
+function renderZoomRows() {
+    const zoomTargets = currentSpans.filter((span) => span.role === "modifier");
+    if (zoomTargets.length === 0)
+        return `<p class="muted">Chưa có cụm bổ nghĩa/cụm lớn để zoom bằng rule hiện tại.</p>`;
+    return `<table><thead><tr><th>Cụm gốc</th><th>Vai trò giữ nguyên</th><th>Zoom cấu trúc bên trong</th></tr></thead><tbody>${zoomTargets.map((span) => {
+        const text = currentText.slice(span.start, span.end);
+        const parts = splitModifierForZoom(text);
+        return `<tr><td><strong>${escapeHtml(text)}</strong></td><td>Modifier / Bổ nghĩa</td><td>${parts.map((part) => `<span class="node">${escapeHtml(part)}</span>`).join('<span class="arrow">→</span>')}</td></tr>`;
+    }).join("")}</tbody></table>`;
+}
 function renderLayer1Core() {
     const coreSpans = currentSpans.filter((span) => span.role === "subject" || span.role === "verb" || span.role === "object");
     return `
@@ -226,15 +266,14 @@ function renderLayer1Core() {
   `;
 }
 function renderLayer2Modifiers() {
-    const modifierSpans = currentSpans.filter((span) => span.role === "modifier" && span.layer <= 2);
-    return `<h2>Layer 2: Thành phần bổ nghĩa</h2><div class="box"><p>Layer này gom các cụm bổ nghĩa quanh câu lõi: nguồn gốc, cách thức, điều kiện, bối cảnh, phương tiện...</p>${renderSpanList(modifierSpans, "Chưa phát hiện cụm bổ nghĩa Layer 2 rõ ràng.")}</div>`;
+    const modifierSpans = currentSpans.filter((span) => span.role === "modifier");
+    return `<h2>Layer 2: Nhận diện cụm bổ nghĩa</h2><div class="box"><p>Layer này chỉ làm một việc: tìm các cụm bổ nghĩa quanh câu lõi. Những cụm này vẫn giữ vai trò <strong>Modifier / Bổ nghĩa</strong>, kể cả khi sang Layer 3 để zoom.</p>${renderSpanList(modifierSpans, "Chưa phát hiện cụm bổ nghĩa rõ ràng.")}</div>`;
 }
 function renderLayer3PhraseDecomposition() {
-    const phraseSpans = currentSpans.filter((span) => span.layer === 3);
-    return `<h2>Layer 3: Phân rã cụm</h2><div class="box"><p>Layer này đi sâu vào cụm danh từ/cụm giới từ bên trong tân ngữ hoặc cụm lớn.</p>${renderSpanList(phraseSpans, "Chưa phát hiện cụm phân rã Layer 3 bằng rule hiện tại.")}</div>`;
+    return `<h2>Layer 3: Zoom cấu trúc bên trong cụm</h2><div class="box"><p>Layer 3 không phải một loại highlight ngữ pháp mới. Nó chỉ zoom vào bên trong các cụm đã nhận diện, đặc biệt là cụm bổ nghĩa hậu vị như <strong>of ... in ...</strong>.</p>${renderZoomRows()}</div>`;
 }
 function renderStructuralRelationLayer() {
-    const relationSpans = currentSpans.filter((span) => span.role === "range" || span.layer === 4);
+    const relationSpans = currentSpans.filter((span) => span.role === "range" || span.revealLayer === 4);
     return `<h2>Layer 4: Quan hệ cấu trúc</h2><div class="box"><p>Layer này tìm các quan hệ như <strong>from A to B</strong>, tương phản, nguyên nhân-kết quả, mục đích hoặc điều kiện.</p>${renderSpanList(relationSpans, "Chưa phát hiện quan hệ cấu trúc rõ bằng rule hiện tại.")}</div>`;
 }
 function renderSemanticLayer() {
@@ -420,7 +459,7 @@ function renderRoleTable() {
         target.innerHTML = `<tr><td colspan="4" class="muted">Chưa phát hiện thành phần nào bằng rule hiện tại.</td></tr>`;
         return;
     }
-    target.innerHTML = currentSpans.map((span) => `<tr><td>${escapeHtml(currentText.slice(span.start, span.end))}</td><td>${escapeHtml(getRoleLabel(span.role))}</td><td>${escapeHtml(span.subtype)} · Layer ${span.layer}</td><td>${escapeHtml(span.tooltip)}</td></tr>`).join("");
+    target.innerHTML = currentSpans.map((span) => `<tr><td>${escapeHtml(currentText.slice(span.start, span.end))}</td><td>${escapeHtml(getRoleLabel(span.role))}</td><td>${escapeHtml(span.subtype)} · hiện từ Layer ${span.revealLayer}</td><td>${escapeHtml(span.tooltip)}</td></tr>`).join("");
 }
 function renderCurrentText(text) {
     currentText = text.trim() || defaultSentence;
