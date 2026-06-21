@@ -61,7 +61,7 @@
 <body>
   <div class="container">
     <h1>Semantic Layer Highlighting</h1>
-    <p class="subtitle">Đọc hiểu câu/đoạn tiếng Anh theo nhiều tầng nghĩa: từ câu lõi → cụm bổ nghĩa → nội hàm chuyên sâu.</p>
+    <p class="subtitle">Đọc hiểu câu/đoạn tiếng Anh theo nhiều tầng nghĩa: từ câu lõi → cụm bổ nghĩa → zoom cấu trúc → nội hàm chuyên sâu.</p>
 
     <div class="panel">
       <h2>Nhập câu hoặc đoạn cần phân tích</h2>
@@ -77,8 +77,8 @@
       <h2>Kết quả highlight</h2>
       <div class="controls">
         <button class="active" type="button" data-layer="1">Layer 1: Câu lõi</button>
-        <button type="button" data-layer="2">Layer 2: Cụm bổ nghĩa</button>
-        <button type="button" data-layer="3">Layer 3: Phân rã cụm</button>
+        <button type="button" data-layer="2">Layer 2: Nhận diện bổ nghĩa</button>
+        <button type="button" data-layer="3">Layer 3: Zoom trong cụm</button>
         <button type="button" data-layer="4">Layer 4: Quan hệ cấu trúc</button>
         <button type="button" data-layer="5">Layer 5: Nội hàm</button>
         <button type="button" data-layer="6">Layer 6: Hoàn chỉnh</button>
@@ -101,7 +101,7 @@
     <div class="panel">
       <h2>Bảng vai trò ngôn ngữ</h2>
       <table>
-        <thead><tr><th>Thành phần</th><th>Vai trò</th><th>Subtype</th><th>Cách hiểu</th></tr></thead>
+        <thead><tr><th>Thành phần</th><th>Vai trò</th><th>Subtype / Layer hiển thị</th><th>Cách hiểu</th></tr></thead>
         <tbody id="roleTableBody"></tbody>
       </table>
     </div>
