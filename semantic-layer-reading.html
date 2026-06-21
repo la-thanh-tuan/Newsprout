@@ -12,24 +12,10 @@
     .subtitle { color: #6b7280; margin-bottom: 24px; }
     .panel { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04); }
     .sentence { font-size: 22px; line-height: 1.9; }
-    .controls, .mode-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
     button { border: 1px solid #d1d5db; background: #fff; color: #111827; padding: 9px 14px; border-radius: 999px; cursor: pointer; font-size: 14px; }
     button:hover { background: #f3f4f6; }
     button.active { background: #111827; color: #fff; border-color: #111827; }
-    .hero-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(260px, .8fr); gap: 16px; align-items: stretch; }
-    .learning-card { background: linear-gradient(135deg, #111827, #374151); color: #fff; border-radius: 16px; padding: 20px; }
-    .learning-card h2 { margin: 0 0 8px; }
-    .learning-card p { margin: 0; color: #e5e7eb; }
-    .stats-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 18px; }
-    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
-    .stat { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px; text-align: center; }
-    .stat strong { display: block; font-size: 20px; }
-    .stat span { color: #6b7280; font-size: 12px; }
-    .progress-track { height: 10px; background: #e5e7eb; border-radius: 999px; overflow: hidden; }
-    .progress-fill { height: 100%; width: 0%; background: #111827; transition: width .25s ease; }
-    .micro-goal { margin-top: 10px; font-size: 13px; color: #4b5563; }
-    .mode-panel { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; align-items: center; }
-    .mode-note { color: #6b7280; font-size: 14px; }
     .hl { padding: 3px 5px; border-radius: 6px; position: relative; cursor: help; transition: all .2s ease; }
     .subject { background: #dbeafe; border-bottom: 3px solid #2563eb; }
     .verb { background: #dcfce7; border-bottom: 3px solid #16a34a; }
@@ -53,8 +39,8 @@
     .legend-range { background: #fee2e2; border-bottom: 3px solid #dc2626; }
     .legend-term { background: #ecfeff; border-bottom: 2px dotted #0891b2; }
     .explanation-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .box, .challenge, .skill-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; }
-    .box h3, .challenge h3, .skill-card h3 { margin-top: 0; font-size: 18px; }
+    .box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; }
+    .box h3 { margin-top: 0; font-size: 18px; }
     .box ul { margin: 0; padding-left: 20px; }
     .logic-flow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 16px; }
     .node { background: #fff; border: 1px solid #d1d5db; border-radius: 999px; padding: 8px 12px; }
@@ -63,50 +49,14 @@
     table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 15px; }
     th, td { border: 1px solid #e5e7eb; padding: 10px; text-align: left; vertical-align: top; }
     th { background: #f3f4f6; }
-    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-    .pill { display: inline-flex; border: 1px solid #e5e7eb; background: #fff; border-radius: 999px; padding: 5px 9px; font-size: 13px; }
-    .practice-options { display: grid; gap: 8px; margin-top: 12px; }
-    .option-button { border-radius: 12px; text-align: left; background: #fff; }
-    .option-button.correct { border-color: #16a34a; background: #dcfce7; }
-    .option-button.wrong { border-color: #dc2626; background: #fee2e2; }
-    .feedback { margin-top: 12px; padding: 12px; border-radius: 12px; background: #f3f4f6; color: #374151; }
-    .feedback.success { background: #dcfce7; color: #14532d; }
-    .feedback.error { background: #fee2e2; color: #7f1d1d; }
-    .skill-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
-    .skill-card p { margin-bottom: 0; }
-    .interest-note { background: #eff6ff; border-left: 4px solid #2563eb; padding: 12px; border-radius: 10px; margin-top: 12px; }
-    @media (max-width: 768px) { .sentence { font-size: 18px; } .explanation-grid, .skill-grid, .hero-grid, .stats-row { grid-template-columns: 1fr; } .tooltip { position: static; display: block; margin-top: 6px; } }
+    @media (max-width: 768px) { .sentence { font-size: 18px; } .explanation-grid { grid-template-columns: 1fr; } .tooltip { position: static; display: block; margin-top: 6px; } }
   </style>
   <script src="./dist/semantic-layer-reading.js" defer></script>
 </head>
 <body>
   <div class="container">
-    <div class="hero-grid">
-      <section class="learning-card">
-        <h1>Semantic Layer Highlighting</h1>
-        <p>Đọc hiểu câu dài theo nhiều tầng nghĩa: thấy câu lõi, hiểu vai trò ý nghĩa, rồi chuyển sang dịch - nói - viết - tóm tắt.</p>
-      </section>
-      <aside class="stats-card" aria-label="Tiến độ học tập">
-        <div class="stats-row">
-          <div class="stat"><strong id="xpValue">0</strong><span>XP</span></div>
-          <div class="stat"><strong id="solvedValue">0</strong><span>Đã đúng</span></div>
-          <div class="stat"><strong id="streakValue">0</strong><span>Streak</span></div>
-        </div>
-        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-        <div class="micro-goal" id="microGoal">Mục tiêu nhỏ: hoàn thành 1 câu hỏi ở layer hiện tại.</div>
-      </aside>
-    </div>
-
-    <div class="panel mode-panel">
-      <div>
-        <h2>Chọn cách học</h2>
-        <p class="mode-note">Học theo hứng thú: xem mẫu khi cần, tự luyện khi muốn thử sức, nhận phản hồi ngay.</p>
-      </div>
-      <div class="mode-controls">
-        <button class="active" type="button" data-mode="learn">Học có hướng dẫn</button>
-        <button type="button" data-mode="practice">Tự luyện</button>
-      </div>
-    </div>
+    <h1>Semantic Layer Highlighting</h1>
+    <p class="subtitle">Đọc hiểu câu dài theo nhiều tầng nghĩa: từ câu lõi → cụm bổ nghĩa → nội hàm chuyên sâu.</p>
 
     <div class="panel">
       <h2>Câu gốc</h2>
