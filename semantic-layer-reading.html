@@ -22,7 +22,6 @@
     .object { background: #fef3c7; border-bottom: 3px solid #d97706; }
     .modifier { background: #f3f4f6; border-bottom: 2px dashed #6b7280; }
     .range { background: #fee2e2; border-bottom: 3px solid #dc2626; }
-    .term { background: #ecfeff; border-bottom: 2px dotted #0891b2; }
     .hidden-layer { color: #9ca3af; background: transparent !important; border-bottom: none !important; }
     .tooltip { display: none; position: absolute; z-index: 50; left: 0; top: 110%; min-width: 280px; max-width: 400px; background: #111827; color: #fff; padding: 10px 12px; border-radius: 10px; font-size: 14px; line-height: 1.5; box-shadow: 0 12px 30px rgba(0,0,0,.18); }
     .hl:hover .tooltip { display: block; }
@@ -37,7 +36,6 @@
     .legend-object { background: #fef3c7; border-bottom: 3px solid #d97706; }
     .legend-modifier { background: #f3f4f6; border-bottom: 2px dashed #6b7280; }
     .legend-range { background: #fee2e2; border-bottom: 3px solid #dc2626; }
-    .legend-term { background: #ecfeff; border-bottom: 2px dotted #0891b2; }
     .explanation-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; }
     .box h3 { margin-top: 0; font-size: 18px; }
@@ -74,12 +72,12 @@
 
       <p class="sentence" id="sentence">
         <span class="hl subject" data-min-layer="1">The documents<span class="tooltip">Chủ ngữ chính: “Các văn kiện”.<span class="synonyms"><strong>Gần nghĩa:</strong> the official papers; the congress documents; the policy documents.</span></span></span>
-        <span class="hl modifier" data-min-layer="2">from the 14th National Party Congress<span class="tooltip">Cụm bổ nghĩa cho “documents”: văn kiện từ Đại hội Đảng toàn quốc lần thứ 14.<span class="synonyms"><strong>Gần nghĩa:</strong> issued by the 14th National Party Congress; adopted at the 14th National Party Congress.</span></span></span>
+        <span class="hl modifier" data-min-layer="2">from the 14th National Party Congress<span class="tooltip">Cụm bổ nghĩa nguồn gốc cho “documents”: văn kiện từ Đại hội Đảng toàn quốc lần thứ 14.<span class="synonyms"><strong>Gần nghĩa:</strong> issued by the 14th National Party Congress; adopted at the 14th National Party Congress.</span></span></span>
         <span class="hl verb" data-min-layer="1">began to define<span class="tooltip">Động từ chính: “bắt đầu xác định / bước đầu định hình”.<span class="synonyms"><strong>Gần nghĩa:</strong> started to outline; began to shape; set out to identify.</span></span></span>,
         <span class="hl modifier" data-min-layer="2">in relatively comprehensive terms<span class="tooltip">Cụm bổ nghĩa cách thức/mức độ cho “define”: xác định một cách tương đối toàn diện.<span class="synonyms"><strong>Gần nghĩa:</strong> in a fairly comprehensive manner; with broad coverage; in quite comprehensive terms.</span></span></span>,
         <span class="hl object" data-min-layer="1">the core components<span class="tooltip">Tân ngữ chính: “các thành tố cốt lõi”.<span class="synonyms"><strong>Gần nghĩa:</strong> the key elements; the essential components; the fundamental parts.</span></span></span>
-        <span class="hl modifier term" data-min-layer="3">of Vietnam’s development model<span class="tooltip">Bổ nghĩa cho “core components”: thuộc mô hình phát triển của Việt Nam.<span class="synonyms"><strong>Gần nghĩa:</strong> of Vietnam’s growth model; of Vietnam’s development framework; of Vietnam’s model for development.</span></span></span>
-        <span class="hl modifier term" data-min-layer="3">in the new era<span class="tooltip">Bối cảnh thời đại: trong kỷ nguyên mới.<span class="synonyms"><strong>Gần nghĩa:</strong> in the new period; in the new phase; in the new stage of development.</span></span></span>,
+        <span class="hl modifier" data-min-layer="3">of Vietnam’s development model<span class="tooltip">Về ngữ pháp: cụm bổ nghĩa cho “core components”. Về ngữ nghĩa: “development model” là thuật ngữ lĩnh vực phát triển/chính sách.<span class="synonyms"><strong>Gần nghĩa:</strong> of Vietnam’s growth model; of Vietnam’s development framework; of Vietnam’s model for development.</span></span></span>
+        <span class="hl modifier" data-min-layer="3">in the new era<span class="tooltip">Về ngữ pháp: cụm bổ nghĩa bối cảnh thời đại. Về ngữ nghĩa: “new era” là khái niệm bối cảnh/chính luận.<span class="synonyms"><strong>Gần nghĩa:</strong> in the new period; in the new phase; in the new stage of development.</span></span></span>,
         <span class="hl range" data-min-layer="4">from the development context, objectives, perspectives, and operational mechanisms to key tasks and strategic breakthroughs<span class="tooltip">Subtype: <strong>prepositional phrase</strong> / cụm giới từ chỉ phạm vi. Pattern: <strong>from A to B</strong>.<span class="synonyms"><strong>Gần nghĩa:</strong> ranging from... to...; covering... through...; spanning... and...</span></span></span>.
       </p>
 
@@ -90,7 +88,6 @@
         <span class="legend-chip"><span class="legend-swatch legend-object"></span>Tân ngữ</span>
         <span class="legend-chip"><span class="legend-swatch legend-modifier"></span>Bổ nghĩa</span>
         <span class="legend-chip"><span class="legend-swatch legend-range"></span>Quan hệ</span>
-        <span class="legend-chip"><span class="legend-swatch legend-term"></span>Thuật ngữ</span>
       </div>
     </div>
 
@@ -105,6 +102,8 @@
           <tr><td>began to define</td><td>Main verb / Động từ chính</td><td>Bắt đầu xác định, bước đầu định hình</td><td>started to outline; began to shape; set out to identify</td></tr>
           <tr><td>the core components</td><td>Object / Tân ngữ</td><td>Các thành tố cốt lõi</td><td>the key elements; the essential components; the fundamental parts</td></tr>
           <tr><td>in relatively comprehensive terms</td><td>Modifier subtype: Manner / Cách thức, mức độ</td><td>Một cách tương đối toàn diện</td><td>in a fairly comprehensive manner; with broad coverage; in quite comprehensive terms</td></tr>
+          <tr><td>of Vietnam’s development model</td><td>Modifier + semantic term inside</td><td>Cụm bổ nghĩa cho “core components”; bên trong có thuật ngữ “development model”</td><td>of Vietnam’s growth model; of Vietnam’s development framework; of Vietnam’s model for development</td></tr>
+          <tr><td>in the new era</td><td>Modifier + contextual concept inside</td><td>Cụm bổ nghĩa bối cảnh; bên trong có khái niệm “new era”</td><td>in the new period; in the new phase; in the new stage of development</td></tr>
           <tr><td>from... to...</td><td>Structural relation subtype: Prepositional phrase / Cụm giới từ chỉ phạm vi</td><td>Từ bối cảnh, mục tiêu, quan điểm, cơ chế đến nhiệm vụ và đột phá chiến lược</td><td>ranging from... to...; covering... through...; spanning... and...</td></tr>
         </tbody>
       </table>
