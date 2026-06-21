@@ -25,8 +25,10 @@
     .range { background: #fee2e2; border-bottom: 3px solid #dc2626; }
     .term { background: #ecfeff; border-bottom: 2px dotted #0891b2; }
     .hidden-layer { color: #9ca3af; background: transparent !important; border-bottom: none !important; }
-    .tooltip { display: none; position: absolute; z-index: 50; left: 0; top: 110%; min-width: 260px; max-width: 360px; background: #111827; color: #fff; padding: 10px 12px; border-radius: 10px; font-size: 14px; line-height: 1.5; box-shadow: 0 12px 30px rgba(0,0,0,.18); }
+    .tooltip { display: none; position: absolute; z-index: 50; left: 0; top: 110%; min-width: 280px; max-width: 400px; background: #111827; color: #fff; padding: 10px 12px; border-radius: 10px; font-size: 14px; line-height: 1.5; box-shadow: 0 12px 30px rgba(0,0,0,.18); }
     .hl:hover .tooltip { display: block; }
+    .synonyms { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.18); color: #e5e7eb; }
+    .synonyms strong { color: #fff; }
     .legend { margin-top: 14px; padding-top: 10px; border-top: 1px solid #e5e7eb; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; color: #374151; }
     .legend-title-main { font-weight: 700; margin-right: 2px; }
     .legend-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border: 1px solid #e5e7eb; border-radius: 999px; background: #fff; line-height: 1.2; }
@@ -70,14 +72,14 @@
       </div>
 
       <p class="sentence" id="sentence">
-        <span class="hl subject" data-min-layer="1">The documents<span class="tooltip">Chủ ngữ chính: “Các văn kiện”.</span></span>
-        <span class="hl modifier" data-min-layer="2">from the 14th National Party Congress<span class="tooltip">Cụm bổ nghĩa cho “documents”: văn kiện từ Đại hội Đảng toàn quốc lần thứ 14.</span></span>
-        <span class="hl verb" data-min-layer="1">began to define<span class="tooltip">Động từ chính: “bắt đầu xác định / bước đầu định hình”.</span></span>,
-        <span class="hl manner" data-min-layer="2">in relatively comprehensive terms<span class="tooltip">Bổ nghĩa cho cách “define”: xác định một cách tương đối toàn diện.</span></span>,
-        <span class="hl object" data-min-layer="1">the core components<span class="tooltip">Tân ngữ chính: “các thành tố cốt lõi”.</span></span>
-        <span class="hl modifier term" data-min-layer="3">of Vietnam’s development model<span class="tooltip">Bổ nghĩa cho “core components”: thuộc mô hình phát triển của Việt Nam.</span></span>
-        <span class="hl modifier term" data-min-layer="3">in the new era<span class="tooltip">Bối cảnh thời đại: trong kỷ nguyên mới.</span></span>,
-        <span class="hl range" data-min-layer="4">from the development context, objectives, perspectives, and operational mechanisms to key tasks and strategic breakthroughs<span class="tooltip">Cấu trúc “from... to...” cho biết phạm vi bao quát: từ nền tảng định hướng đến nhiệm vụ và đột phá chiến lược.</span></span>.
+        <span class="hl subject" data-min-layer="1">The documents<span class="tooltip">Chủ ngữ chính: “Các văn kiện”.<span class="synonyms"><strong>Gần nghĩa:</strong> the official papers; the congress documents; the policy documents.</span></span></span>
+        <span class="hl modifier" data-min-layer="2">from the 14th National Party Congress<span class="tooltip">Cụm bổ nghĩa cho “documents”: văn kiện từ Đại hội Đảng toàn quốc lần thứ 14.<span class="synonyms"><strong>Gần nghĩa:</strong> issued by the 14th National Party Congress; adopted at the 14th National Party Congress.</span></span></span>
+        <span class="hl verb" data-min-layer="1">began to define<span class="tooltip">Động từ chính: “bắt đầu xác định / bước đầu định hình”.<span class="synonyms"><strong>Gần nghĩa:</strong> started to outline; began to shape; set out to identify.</span></span></span>,
+        <span class="hl manner" data-min-layer="2">in relatively comprehensive terms<span class="tooltip">Bổ nghĩa cho cách “define”: xác định một cách tương đối toàn diện.<span class="synonyms"><strong>Gần nghĩa:</strong> in a fairly comprehensive manner; with broad coverage; in quite comprehensive terms.</span></span></span>,
+        <span class="hl object" data-min-layer="1">the core components<span class="tooltip">Tân ngữ chính: “các thành tố cốt lõi”.<span class="synonyms"><strong>Gần nghĩa:</strong> the key elements; the essential components; the fundamental parts.</span></span></span>
+        <span class="hl modifier term" data-min-layer="3">of Vietnam’s development model<span class="tooltip">Bổ nghĩa cho “core components”: thuộc mô hình phát triển của Việt Nam.<span class="synonyms"><strong>Gần nghĩa:</strong> of Vietnam’s growth model; of Vietnam’s development framework; of Vietnam’s model for development.</span></span></span>
+        <span class="hl modifier term" data-min-layer="3">in the new era<span class="tooltip">Bối cảnh thời đại: trong kỷ nguyên mới.<span class="synonyms"><strong>Gần nghĩa:</strong> in the new period; in the new phase; in the new stage of development.</span></span></span>,
+        <span class="hl range" data-min-layer="4">from the development context, objectives, perspectives, and operational mechanisms to key tasks and strategic breakthroughs<span class="tooltip">Cấu trúc “from... to...” cho biết phạm vi bao quát: từ nền tảng định hướng đến nhiệm vụ và đột phá chiến lược.<span class="synonyms"><strong>Gần nghĩa:</strong> ranging from... to...; covering... through...; spanning... and...</span></span></span>.
       </p>
 
       <div class="legend" aria-label="Chú giải màu sắc">
@@ -97,13 +99,13 @@
     <div class="panel">
       <h2>Bảng vai trò ngôn ngữ</h2>
       <table>
-        <thead><tr><th>Thành phần</th><th>Vai trò</th><th>Cách hiểu</th></tr></thead>
+        <thead><tr><th>Thành phần</th><th>Vai trò</th><th>Cách hiểu</th><th>Cách dùng gần nghĩa</th></tr></thead>
         <tbody>
-          <tr><td>The documents</td><td>Subject / Chủ ngữ</td><td>Các văn kiện</td></tr>
-          <tr><td>began to define</td><td>Main verb / Động từ chính</td><td>Bắt đầu xác định, bước đầu định hình</td></tr>
-          <tr><td>the core components</td><td>Object / Tân ngữ</td><td>Các thành tố cốt lõi</td></tr>
-          <tr><td>in relatively comprehensive terms</td><td>Manner / Cách thức</td><td>Một cách tương đối toàn diện</td></tr>
-          <tr><td>from... to...</td><td>Range / Phạm vi</td><td>Từ bối cảnh, mục tiêu, quan điểm, cơ chế đến nhiệm vụ và đột phá chiến lược</td></tr>
+          <tr><td>The documents</td><td>Subject / Chủ ngữ</td><td>Các văn kiện</td><td>the official papers; the congress documents; the policy documents</td></tr>
+          <tr><td>began to define</td><td>Main verb / Động từ chính</td><td>Bắt đầu xác định, bước đầu định hình</td><td>started to outline; began to shape; set out to identify</td></tr>
+          <tr><td>the core components</td><td>Object / Tân ngữ</td><td>Các thành tố cốt lõi</td><td>the key elements; the essential components; the fundamental parts</td></tr>
+          <tr><td>in relatively comprehensive terms</td><td>Manner / Cách thức</td><td>Một cách tương đối toàn diện</td><td>in a fairly comprehensive manner; with broad coverage; in quite comprehensive terms</td></tr>
+          <tr><td>from... to...</td><td>Range / Phạm vi</td><td>Từ bối cảnh, mục tiêu, quan điểm, cơ chế đến nhiệm vụ và đột phá chiến lược</td><td>ranging from... to...; covering... through...; spanning... and...</td></tr>
         </tbody>
       </table>
     </div>
