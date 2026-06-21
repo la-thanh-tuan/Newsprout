@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Semantic Layer Highlighting</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f8fafc; color: #111827; line-height: 1.65; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
+    h1 { margin-bottom: 8px; font-size: 28px; }
+    .subtitle { color: #6b7280; margin-bottom: 24px; }
+    .panel { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04); }
+    .sentence { font-size: 22px; line-height: 1.9; }
+    .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    button { border: 1px solid #d1d5db; background: #fff; color: #111827; padding: 9px 14px; border-radius: 999px; cursor: pointer; font-size: 14px; }
+    button:hover { background: #f3f4f6; }
+    button.active { background: #111827; color: #fff; border-color: #111827; }
+    .hl { padding: 3px 5px; border-radius: 6px; position: relative; cursor: help; transition: all .2s ease; }
+    .subject { background: #dbeafe; border-bottom: 3px solid #2563eb; }
+    .verb { background: #dcfce7; border-bottom: 3px solid #16a34a; }
+    .object { background: #fef3c7; border-bottom: 3px solid #d97706; }
+    .modifier { background: #f3f4f6; border-bottom: 2px dashed #6b7280; }
+    .manner { background: #ede9fe; border-bottom: 3px solid #7c3aed; }
+    .range { background: #fee2e2; border-bottom: 3px solid #dc2626; }
+    .term { background: #ecfeff; border-bottom: 2px dotted #0891b2; }
+    .hidden-layer { color: #9ca3af; background: transparent !important; border-bottom: none !important; }
+    .tooltip { display: none; position: absolute; z-index: 50; left: 0; top: 110%; min-width: 260px; max-width: 360px; background: #111827; color: #fff; padding: 10px 12px; border-radius: 10px; font-size: 14px; line-height: 1.5; box-shadow: 0 12px 30px rgba(0,0,0,.18); }
+    .hl:hover .tooltip { display: block; }
+    .explanation-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; }
+    .box h3 { margin-top: 0; font-size: 18px; }
+    .box ul { margin: 0; padding-left: 20px; }
+    .logic-flow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 16px; }
+    .node { background: #fff; border: 1px solid #d1d5db; border-radius: 999px; padding: 8px 12px; }
+    .arrow { color: #6b7280; }
+    .final-meaning { font-size: 18px; background: #fefce8; border-left: 5px solid #eab308; padding: 16px; border-radius: 10px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 15px; }
+    th, td { border: 1px solid #e5e7eb; padding: 10px; text-align: left; vertical-align: top; }
+    th { background: #f3f4f6; }
+    @media (max-width: 768px) { .sentence { font-size: 18px; } .explanation-grid { grid-template-columns: 1fr; } .tooltip { position: static; display: block; margin-top: 6px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Semantic Layer Highlighting</h1>
+    <p class="subtitle">Đọc hiểu câu dài theo nhiều tầng nghĩa: từ câu lõi → cụm bổ nghĩa → nội hàm chuyên sâu.</p>
+
+    <div class="panel">
+      <h2>Câu gốc</h2>
+      <div class="controls">
+        <button class="active" onclick="setLayer(1)">Layer 1: Câu lõi</button>
+        <button onclick="setLayer(2)">Layer 2: Cụm bổ nghĩa</button>
+        <button onclick="setLayer(3)">Layer 3: Cụm danh từ</button>
+        <button onclick="setLayer(4)">Layer 4: Logic</button>
+        <button onclick="setLayer(5)">Layer 5: Nội hàm</button>
+        <button onclick="setLayer(6)">Layer 6: Hoàn chỉnh</button>
+      </div>
+
+      <p class="sentence" id="sentence">
+        <span class="hl subject" data-min-layer="1">The documents<span class="tooltip">Chủ ngữ chính: “Các văn kiện”.</span></span>
+        <span class="hl modifier" data-min-layer="2">from the 14th National Party Congress<span class="tooltip">Cụm bổ nghĩa cho “documents”: văn kiện từ Đại hội Đảng toàn quốc lần thứ 14.</span></span>
+        <span class="hl verb" data-min-layer="1">began to define<span class="tooltip">Động từ chính: “bắt đầu xác định / bước đầu định hình”.</span></span>,
+        <span class="hl manner" data-min-layer="2">in relatively comprehensive terms<span class="tooltip">Bổ nghĩa cho cách “define”: xác định một cách tương đối toàn diện.</span></span>,
+        <span class="hl object" data-min-layer="1">the core components<span class="tooltip">Tân ngữ chính: “các thành tố cốt lõi”.</span></span>
+        <span class="hl modifier term" data-min-layer="3">of Vietnam’s development model<span class="tooltip">Bổ nghĩa cho “core components”: thuộc mô hình phát triển của Việt Nam.</span></span>
+        <span class="hl modifier term" data-min-layer="3">in the new era<span class="tooltip">Bối cảnh thời đại: trong kỷ nguyên mới.</span></span>,
+        <span class="hl range" data-min-layer="4">from the development context, objectives, perspectives, and operational mechanisms to key tasks and strategic breakthroughs<span class="tooltip">Cấu trúc “from... to...” cho biết phạm vi bao quát: từ nền tảng định hướng đến nhiệm vụ và đột phá chiến lược.</span></span>.
+      </p>
+    </div>
+
+    <div class="panel" id="layerExplanation"></div>
+
+    <div class="panel">
+      <h2>Bảng vai trò ngôn ngữ</h2>
+      <table>
+        <thead><tr><th>Thành phần</th><th>Vai trò</th><th>Cách hiểu</th></tr></thead>
+        <tbody>
+          <tr><td>The documents</td><td>Subject / Chủ ngữ</td><td>Các văn kiện</td></tr>
+          <tr><td>began to define</td><td>Main verb / Động từ chính</td><td>Bắt đầu xác định, bước đầu định hình</td></tr>
+          <tr><td>the core components</td><td>Object / Tân ngữ</td><td>Các thành tố cốt lõi</td></tr>
+          <tr><td>in relatively comprehensive terms</td><td>Manner / Cách thức</td><td>Một cách tương đối toàn diện</td></tr>
+          <tr><td>from... to...</td><td>Range / Phạm vi</td><td>Từ bối cảnh, mục tiêu, quan điểm, cơ chế đến nhiệm vụ và đột phá chiến lược</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const layerContent = {
+      1: `<h2>Layer 1: Detect câu lõi</h2><div class="box"><h3>Câu lõi</h3><p><strong>The documents / began to define / the core components.</strong></p><p>Nghĩa nhanh: <strong>Các văn kiện bắt đầu xác định các thành tố cốt lõi.</strong></p></div><p>Ở tầng này, mục tiêu là bỏ qua toàn bộ phần phụ để thấy “xương sống” của câu.</p>`,
+      2: `<h2>Layer 2: Gắn cụm bổ nghĩa</h2><div class="explanation-grid"><div class="box"><h3>Cụm bổ nghĩa</h3><ul><li><strong>from the 14th National Party Congress</strong>: bổ nghĩa cho “documents”.</li><li><strong>in relatively comprehensive terms</strong>: bổ nghĩa cho cách “define”.</li><li><strong>of Vietnam’s development model</strong>: bổ nghĩa cho “core components”.</li><li><strong>in the new era</strong>: bổ nghĩa bối cảnh.</li></ul></div><div class="box"><h3>Ý nghĩa</h3><p>Câu không chỉ nói “văn kiện xác định thành tố”, mà nói rõ văn kiện nào, xác định theo mức độ nào, thành tố thuộc mô hình nào, và trong giai đoạn nào.</p></div></div>`,
+      3: `<h2>Layer 3: Phân rã cụm danh từ dài</h2><div class="box"><h3>Cụm cần phân tích</h3><p><strong>the core components of Vietnam’s development model in the new era</strong></p></div><div class="logic-flow"><span class="node">components</span><span class="arrow">→</span><span class="node">core components</span><span class="arrow">→</span><span class="node">of Vietnam’s development model</span><span class="arrow">→</span><span class="node">in the new era</span></div><p>Nghĩa tăng dần: thành tố → thành tố cốt lõi → thành tố cốt lõi của mô hình phát triển Việt Nam → trong kỷ nguyên mới.</p>`,
+      4: `<h2>Layer 4: Xây quan hệ logic</h2><div class="logic-flow"><span class="node">Documents</span><span class="arrow">→</span><span class="node">Define</span><span class="arrow">→</span><span class="node">Core components</span><span class="arrow">→</span><span class="node">Development model</span><span class="arrow">→</span><span class="node">From context to breakthroughs</span></div><p>Logic của câu là: <strong>nguồn định hướng → hành động khái niệm hóa → đối tượng được định hình → phạm vi bao quát.</strong></p>`,
+      5: `<h2>Layer 5: Đi sâu nội hàm thuật ngữ</h2><table><thead><tr><th>Thuật ngữ</th><th>Nội hàm</th></tr></thead><tbody><tr><td><strong>documents</strong></td><td>Trong ngữ cảnh chính trị, nên hiểu là “văn kiện”, tức tài liệu định hướng chính thức.</td></tr><tr><td><strong>development model</strong></td><td>Mô hình phát triển: khung tổng thể về mục tiêu, phương thức, cơ chế, nguồn lực và chiến lược phát triển.</td></tr><tr><td><strong>perspectives</strong></td><td>Quan điểm chỉ đạo, cách nhìn, nguyên tắc tư duy phát triển.</td></tr><tr><td><strong>operational mechanisms</strong></td><td>Cơ chế vận hành: cách mô hình được triển khai thông qua thể chế, chính sách và tổ chức thực thi.</td></tr><tr><td><strong>strategic breakthroughs</strong></td><td>Đột phá chiến lược: các điểm then chốt có khả năng tạo chuyển biến lớn.</td></tr></tbody></table>`,
+      6: `<h2>Layer 6: Tái tạo nghĩa hoàn chỉnh</h2><div class="final-meaning">Các văn kiện Đại hội Đảng toàn quốc lần thứ 14 đã bước đầu định hình tương đối toàn diện các thành tố cốt lõi của mô hình phát triển Việt Nam trong kỷ nguyên mới, bao gồm từ bối cảnh phát triển, mục tiêu, quan điểm và cơ chế vận hành đến các nhiệm vụ trọng tâm và đột phá chiến lược.</div><p>Nói ngắn gọn:</p><div class="box"><strong>Văn kiện Đại hội XIV đặt nền móng cho việc định hình mô hình phát triển mới của Việt Nam, từ tầng tư duy định hướng đến tầng hành động chiến lược.</strong></div>`
+    };
+
+    function setLayer(layer) {
+      document.querySelectorAll("button").forEach((button, index) => button.classList.toggle("active", index === layer - 1));
+      document.querySelectorAll(".hl").forEach(item => {
+        const minLayer = Number(item.dataset.minLayer);
+        item.classList.toggle("hidden-layer", minLayer > layer);
+      });
+      document.getElementById("layerExplanation").innerHTML = layerContent[layer];
+    }
+
+    setLayer(1);
+  </script>
+</body>
+</html>
