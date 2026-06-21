@@ -193,6 +193,63 @@ function bindLayerButtons(): void {
   });
 }
 
+function injectSemanticTermStyles(): void {
+  if (document.getElementById("semanticTermStyles")) return;
+
+  const style = document.createElement("style");
+  style.id = "semanticTermStyles";
+  style.textContent = `
+    .semantic-term { background: #ecfeff; border-bottom: 3px dotted #0891b2; border-radius: 4px; padding: 0 2px; }
+    .hidden-layer .semantic-term { background: transparent !important; border-bottom: none !important; }
+    .legend-semantic-term { background: #ecfeff; border-bottom: 3px dotted #0891b2; }
+  `;
+  document.head.appendChild(style);
+}
+
+function wrapDirectTextTerm(container: HTMLElement, term: string): void {
+  const textNode = Array.from(container.childNodes).find((node) => node.nodeType === Node.TEXT_NODE && node.textContent?.includes(term));
+  if (!textNode?.textContent || !textNode.parentNode) return;
+
+  const parts = textNode.textContent.split(term);
+  if (parts.length < 2) return;
+
+  const fragment = document.createDocumentFragment();
+  parts.forEach((part, index) => {
+    if (part) fragment.appendChild(document.createTextNode(part));
+    if (index < parts.length - 1) {
+      const marker = document.createElement("span");
+      marker.className = "semantic-term";
+      marker.textContent = term;
+      fragment.appendChild(marker);
+    }
+  });
+
+  textNode.parentNode.replaceChild(fragment, textNode);
+}
+
+function markSemanticTerms(): void {
+  document.querySelectorAll<HTMLElement>(".hl.modifier").forEach((item) => {
+    wrapDirectTextTerm(item, "development model");
+    wrapDirectTextTerm(item, "new era");
+  });
+}
+
+function addSemanticTermLegend(): void {
+  const legend = document.querySelector<HTMLElement>(".legend");
+  if (!legend || legend.querySelector(".legend-semantic-term")) return;
+
+  const chip = document.createElement("span");
+  chip.className = "legend-chip";
+  chip.innerHTML = `<span class="legend-swatch legend-semantic-term"></span>Thuật ngữ / khái niệm`;
+  legend.appendChild(chip);
+}
+
+function applySemanticTermMarkers(): void {
+  injectSemanticTermStyles();
+  markSemanticTerms();
+  addSemanticTermLegend();
+}
+
 function renderPatternTags<T extends string>(types: T[], getPattern: (type: T) => LayerPattern<T>): string {
   if (types.length === 0) return `<span class="muted">Chưa phát hiện</span>`;
 
@@ -243,5 +300,6 @@ function bindAnalysisControls(): void {
 window.addEventListener("DOMContentLoaded", () => {
   bindLayerButtons();
   bindAnalysisControls();
+  applySemanticTermMarkers();
   setLayer(1);
 });
