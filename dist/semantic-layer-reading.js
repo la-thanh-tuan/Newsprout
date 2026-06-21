@@ -134,7 +134,8 @@ function resolveLayerContent(layer) {
 }
 function renderLayerExplanation(layer) {
     const target = document.getElementById("layerExplanation");
-    if (!target) return;
+    if (!target)
+        return;
     target.innerHTML = resolveLayerContent(layer);
 }
 function setLayer(layer) {
@@ -144,11 +145,66 @@ function setLayer(layer) {
 }
 function bindLayerButtons() {
     document.querySelectorAll("[data-layer]").forEach((button) => {
-        button.addEventListener("click", () => setLayer(toLayerNumber(button.dataset.layer ?? null)));
+        button.addEventListener("click", () => {
+            setLayer(toLayerNumber(button.dataset.layer ?? null));
+        });
     });
 }
+function injectSemanticTermStyles() {
+    if (document.getElementById("semanticTermStyles"))
+        return;
+    const style = document.createElement("style");
+    style.id = "semanticTermStyles";
+    style.textContent = `
+    .semantic-term { background: #ecfeff; border-bottom: 3px dotted #0891b2; border-radius: 4px; padding: 0 2px; }
+    .hidden-layer .semantic-term { background: transparent !important; border-bottom: none !important; }
+    .legend-semantic-term { background: #ecfeff; border-bottom: 3px dotted #0891b2; }
+  `;
+    document.head.appendChild(style);
+}
+function wrapDirectTextTerm(container, term) {
+    const textNode = Array.from(container.childNodes).find((node) => node.nodeType === Node.TEXT_NODE && node.textContent?.includes(term));
+    if (!textNode?.textContent || !textNode.parentNode)
+        return;
+    const parts = textNode.textContent.split(term);
+    if (parts.length < 2)
+        return;
+    const fragment = document.createDocumentFragment();
+    parts.forEach((part, index) => {
+        if (part)
+            fragment.appendChild(document.createTextNode(part));
+        if (index < parts.length - 1) {
+            const marker = document.createElement("span");
+            marker.className = "semantic-term";
+            marker.textContent = term;
+            fragment.appendChild(marker);
+        }
+    });
+    textNode.parentNode.replaceChild(fragment, textNode);
+}
+function markSemanticTerms() {
+    document.querySelectorAll(".hl.modifier").forEach((item) => {
+        wrapDirectTextTerm(item, "development model");
+        wrapDirectTextTerm(item, "new era");
+    });
+}
+function addSemanticTermLegend() {
+    const legend = document.querySelector(".legend");
+    if (!legend || legend.querySelector(".legend-semantic-term"))
+        return;
+    const chip = document.createElement("span");
+    chip.className = "legend-chip";
+    chip.innerHTML = `<span class="legend-swatch legend-semantic-term"></span>Thuật ngữ / khái niệm`;
+    legend.appendChild(chip);
+}
+function applySemanticTermMarkers() {
+    injectSemanticTermStyles();
+    markSemanticTerms();
+    addSemanticTermLegend();
+}
 function renderPatternTags(types, getPattern) {
-    if (types.length === 0) return `<span class="muted">Chưa phát hiện</span>`;
+    if (types.length === 0)
+        return `<span class="muted">Chưa phát hiện</span>`;
     return types.map((type) => {
         const pattern = getPattern(type);
         return `<span class="tag" title="${pattern.grammarName}: ${pattern.pattern}">${pattern.vietnameseName}</span>`;
@@ -171,7 +227,8 @@ function renderSentenceAnalysis(sentence, result, index) {
 function analyzeInputText() {
     const input = document.getElementById("analysisInput");
     const output = document.getElementById("analysisOutput");
-    if (!input || !output) return;
+    if (!input || !output)
+        return;
     const sentences = splitIntoSentences(input.value).slice(0, 12);
     if (sentences.length === 0) {
         output.innerHTML = `<p class="muted">Hãy nhập ít nhất một câu tiếng Anh.</p>`;
@@ -186,5 +243,6 @@ function bindAnalysisControls() {
 window.addEventListener("DOMContentLoaded", () => {
     bindLayerButtons();
     bindAnalysisControls();
+    applySemanticTermMarkers();
     setLayer(1);
 });
