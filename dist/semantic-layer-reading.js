@@ -1,4 +1,5 @@
 "use strict";
+const semanticTermVisibilityStorageKey = "semanticLayer.showSemanticTerms";
 const currentStructuralRelation = {
     type: "prepositional-range",
     sourceText: "from the development context, objectives, perspectives, and operational mechanisms to key tasks and strategic breakthroughs",
@@ -157,10 +158,36 @@ function injectSemanticTermStyles() {
     style.id = "semanticTermStyles";
     style.textContent = `
     .semantic-term { background: #ecfeff; border-bottom: 3px dotted #0891b2; border-radius: 4px; padding: 0 2px; }
+    body:not(.semantic-terms-visible) .semantic-term { background: transparent !important; border-bottom: none !important; padding: 0 !important; }
     .hidden-layer .semantic-term { background: transparent !important; border-bottom: none !important; }
     .legend-semantic-term { background: #ecfeff; border-bottom: 3px dotted #0891b2; }
+    body:not(.semantic-terms-visible) .legend-semantic-term-chip { display: none; }
+    .semantic-term-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 999px; background: #fff; font-size: 14px; cursor: pointer; }
+    .semantic-term-toggle input { margin: 0; }
   `;
     document.head.appendChild(style);
+}
+function getSavedSemanticTermVisibility() {
+    return localStorage.getItem(semanticTermVisibilityStorageKey) === "true";
+}
+function setSemanticTermVisibility(isVisible) {
+    document.body.classList.toggle("semantic-terms-visible", isVisible);
+    localStorage.setItem(semanticTermVisibilityStorageKey, String(isVisible));
+}
+function addSemanticTermToggle() {
+    const controls = document.querySelector(".controls");
+    if (!controls || document.getElementById("semanticTermToggle"))
+        return;
+    const label = document.createElement("label");
+    label.className = "semantic-term-toggle";
+    label.innerHTML = `<input id="semanticTermToggle" type="checkbox" /> Hiện thuật ngữ / khái niệm`;
+    const input = label.querySelector("input");
+    if (!input)
+        return;
+    input.checked = getSavedSemanticTermVisibility();
+    setSemanticTermVisibility(input.checked);
+    input.addEventListener("change", () => setSemanticTermVisibility(input.checked));
+    controls.appendChild(label);
 }
 function wrapDirectTextTerm(container, term) {
     const textNode = Array.from(container.childNodes).find((node) => node.nodeType === Node.TEXT_NODE && node.textContent?.includes(term));
@@ -193,7 +220,7 @@ function addSemanticTermLegend() {
     if (!legend || legend.querySelector(".legend-semantic-term"))
         return;
     const chip = document.createElement("span");
-    chip.className = "legend-chip";
+    chip.className = "legend-chip legend-semantic-term-chip";
     chip.innerHTML = `<span class="legend-swatch legend-semantic-term"></span>Thuật ngữ / khái niệm`;
     legend.appendChild(chip);
 }
@@ -201,6 +228,7 @@ function applySemanticTermMarkers() {
     injectSemanticTermStyles();
     markSemanticTerms();
     addSemanticTermLegend();
+    addSemanticTermToggle();
 }
 function renderPatternTags(types, getPattern) {
     if (types.length === 0)
