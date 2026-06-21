@@ -80,10 +80,6 @@ function getRoleLabel(role: HighlightRole): string {
   return labels[role];
 }
 
-function getRoleClass(role: HighlightRole): string {
-  return role;
-}
-
 function getSentenceSegments(text: string): SentenceSegment[] {
   const segments: SentenceSegment[] = [];
   const regex = /[^.!?]+[.!?]?/g;
@@ -219,7 +215,6 @@ function addRegexSpan(spans: HighlightSpan[], segment: SentenceSegment, regex: R
     const start = segment.start + match.index + Math.max(localOffset, 0);
     const end = start + matchedText.length;
     const range = trimRange(currentText, start, end);
-
     addSpan(spans, { start: range.start, end: range.end, layer, role, subtype, tooltip });
   }
 }
@@ -255,9 +250,8 @@ function renderHighlightedSentence(text: string, spans: HighlightSpan[]): string
 
   sorted.forEach((span) => {
     if (span.start < cursor || span.end > text.length) return;
-
     html += escapeHtml(text.slice(cursor, span.start));
-    html += `<span class="hl ${getRoleClass(span.role)}" data-min-layer="${span.layer}" data-subtype="${escapeHtml(span.subtype)}">${escapeHtml(text.slice(span.start, span.end))}${renderTooltip(span)}</span>`;
+    html += `<span class="hl ${span.role}" data-min-layer="${span.layer}" data-subtype="${escapeHtml(span.subtype)}">${escapeHtml(text.slice(span.start, span.end))}${renderTooltip(span)}</span>`;
     cursor = span.end;
   });
 
@@ -279,8 +273,14 @@ function renderFlowNodes(parts: string[]): string {
 
 function renderSpanList(spans: HighlightSpan[], emptyText: string): string {
   if (spans.length === 0) return `<p class="muted">${emptyText}</p>`;
-
   return `<ul>${spans.map((span) => `<li><strong>${escapeHtml(currentText.slice(span.start, span.end))}</strong>: ${escapeHtml(getRoleLabel(span.role))} · <small>${escapeHtml(span.subtype)}</small></li>`).join("")}</ul>`;
+}
+
+function renderPatternTags<T extends string>(types: T[], getPattern: (type: T) => LayerPattern<T>): string[] {
+  return types.map((type) => {
+    const pattern = getPattern(type);
+    return `<span class="tag" title="${escapeHtml(pattern.grammarName)}: ${escapeHtml(pattern.pattern)}">${escapeHtml(pattern.vietnameseName)}</span>`;
+  });
 }
 
 function renderDetectedPatternTags(): string {
@@ -311,55 +311,29 @@ function renderLayer1Core(): string {
 
 function renderLayer2Modifiers(): string {
   const modifierSpans = currentSpans.filter((span) => span.role === "modifier" && span.layer <= 2);
-  return `
-    <h2>Layer 2: Thành phần bổ nghĩa</h2>
-    <div class="box">
-      <p>Layer này gom các cụm bổ nghĩa quanh câu lõi: nguồn gốc, cách thức, điều kiện, bối cảnh, phương tiện...</p>
-      ${renderSpanList(modifierSpans, "Chưa phát hiện cụm bổ nghĩa Layer 2 rõ ràng.")}
-    </div>
-  `;
+  return `<h2>Layer 2: Thành phần bổ nghĩa</h2><div class="box"><p>Layer này gom các cụm bổ nghĩa quanh câu lõi: nguồn gốc, cách thức, điều kiện, bối cảnh, phương tiện...</p>${renderSpanList(modifierSpans, "Chưa phát hiện cụm bổ nghĩa Layer 2 rõ ràng.")}</div>`;
 }
 
 function renderLayer3PhraseDecomposition(): string {
   const phraseSpans = currentSpans.filter((span) => span.layer === 3);
-  return `
-    <h2>Layer 3: Phân rã cụm</h2>
-    <div class="box">
-      <p>Layer này đi sâu vào cụm danh từ/cụm giới từ bên trong tân ngữ hoặc cụm lớn.</p>
-      ${renderSpanList(phraseSpans, "Chưa phát hiện cụm phân rã Layer 3 bằng rule hiện tại.")}
-    </div>
-  `;
+  return `<h2>Layer 3: Phân rã cụm</h2><div class="box"><p>Layer này đi sâu vào cụm danh từ/cụm giới từ bên trong tân ngữ hoặc cụm lớn.</p>${renderSpanList(phraseSpans, "Chưa phát hiện cụm phân rã Layer 3 bằng rule hiện tại.")}</div>`;
 }
 
 function renderStructuralRelationLayer(): string {
   const relationSpans = currentSpans.filter((span) => span.role === "range" || span.layer === 4);
-  return `
-    <h2>Layer 4: Quan hệ cấu trúc</h2>
-    <div class="box">
-      <p>Layer này tìm các quan hệ như <strong>from A to B</strong>, tương phản, nguyên nhân-kết quả, mục đích hoặc điều kiện.</p>
-      ${renderSpanList(relationSpans, "Chưa phát hiện quan hệ cấu trúc rõ bằng rule hiện tại.")}
-    </div>
-  `;
+  return `<h2>Layer 4: Quan hệ cấu trúc</h2><div class="box"><p>Layer này tìm các quan hệ như <strong>from A to B</strong>, tương phản, nguyên nhân-kết quả, mục đích hoặc điều kiện.</p>${renderSpanList(relationSpans, "Chưa phát hiện quan hệ cấu trúc rõ bằng rule hiện tại.")}</div>`;
 }
 
 function renderSemanticLayer(): string {
   const terms = getActiveSemanticTermEntries(currentText);
-  if (terms.length === 0) {
-    return `<h2>Layer 5: Thuật ngữ / khái niệm</h2><p class="muted">Chưa phát hiện thuật ngữ trong dictionary hiện tại. Có thể mở rộng catalog trong <code>semanticTermCatalog</code>.</p>`;
-  }
-
+  if (terms.length === 0) return `<h2>Layer 5: Thuật ngữ / khái niệm</h2><p class="muted">Chưa phát hiện thuật ngữ trong dictionary hiện tại. Có thể mở rộng catalog trong <code>semanticTermCatalog</code>.</p>`;
   return `<h2>Layer 5: Thuật ngữ / khái niệm</h2><table><thead><tr><th>Term</th><th>Loại</th><th>Nội hàm</th><th>Gần nghĩa</th></tr></thead><tbody>${terms.map((term) => `<tr><td><strong>${escapeHtml(term.term)}</strong></td><td>${escapeHtml(term.label)}</td><td>${escapeHtml(term.note)}</td><td>${escapeHtml(term.synonyms)}</td></tr>`).join("")}</tbody></table>`;
 }
 
 function renderReconstructionLayer(): string {
   const coreSpans = currentSpans.filter((span) => span.role === "subject" || span.role === "verb" || span.role === "object");
   const coreText = coreSpans.map((span) => currentText.slice(span.start, span.end)).join(" / ");
-  return `
-    <h2>Layer 6: Hoàn chỉnh</h2>
-    <div class="final-meaning">${escapeHtml(clampText(currentText, 360))}</div>
-    <p>Nói theo pipeline đọc:</p>
-    <div class="box"><strong>Câu lõi:</strong> ${coreText ? escapeHtml(coreText) : "Chưa đủ dữ liệu để rút câu lõi."}</div>
-  `;
+  return `<h2>Layer 6: Hoàn chỉnh</h2><div class="final-meaning">${escapeHtml(clampText(currentText, 360))}</div><p>Nói theo pipeline đọc:</p><div class="box"><strong>Câu lõi:</strong> ${coreText ? escapeHtml(coreText) : "Chưa đủ dữ liệu để rút câu lõi."}</div>`;
 }
 
 const layerContent: LayerContentMap = {
@@ -370,13 +344,6 @@ const layerContent: LayerContentMap = {
   5: renderSemanticLayer,
   6: renderReconstructionLayer
 };
-
-function renderPatternTags<T extends string>(types: T[], getPattern: (type: T) => LayerPattern<T>): string[] {
-  return types.map((type) => {
-    const pattern = getPattern(type);
-    return `<span class="tag" title="${escapeHtml(pattern.grammarName)}: ${escapeHtml(pattern.pattern)}">${escapeHtml(pattern.vietnameseName)}</span>`;
-  });
-}
 
 function toLayerNumber(value: string | null): LayerNumber {
   const parsed = Number(value);
@@ -395,7 +362,6 @@ function updateHighlightVisibility(layer: LayerNumber): void {
     const minLayer = Number(item.dataset.minLayer ?? "1");
     item.classList.toggle("hidden-layer", minLayer > layer);
   });
-
   applySemanticTermHighlight(getSavedSemanticTermVisibility());
 }
 
@@ -481,7 +447,6 @@ function collectTermRanges(root: HTMLElement, terms: string[]): Range[] {
       const lowerTerm = term.toLowerCase();
       let startIndex = 0;
       let matchIndex = lowerText.indexOf(lowerTerm, startIndex);
-
       while (matchIndex !== -1) {
         const range = document.createRange();
         range.setStart(textNode, matchIndex);
@@ -494,7 +459,6 @@ function collectTermRanges(root: HTMLElement, terms: string[]): Range[] {
 
     currentNode = walker.nextNode();
   }
-
   return ranges;
 }
 
@@ -502,7 +466,6 @@ function applySemanticTermHighlight(isVisible: boolean): void {
   document.body.classList.toggle("semantic-terms-visible", isVisible);
   const registry = getCssHighlightRegistry();
   if (!registry) return;
-
   registry.delete(semanticTermHighlightName);
   if (!isVisible) return;
 
@@ -556,12 +519,10 @@ function applySemanticTermControls(): void {
 function renderRoleTable(): void {
   const target = document.getElementById("roleTableBody");
   if (!target) return;
-
   if (currentSpans.length === 0) {
     target.innerHTML = `<tr><td colspan="4" class="muted">Chưa phát hiện thành phần nào bằng rule hiện tại.</td></tr>`;
     return;
   }
-
   target.innerHTML = currentSpans.map((span) => `<tr><td>${escapeHtml(currentText.slice(span.start, span.end))}</td><td>${escapeHtml(getRoleLabel(span.role))}</td><td>${escapeHtml(span.subtype)} · Layer ${span.layer}</td><td>${escapeHtml(span.tooltip)}</td></tr>`).join("");
 }
 
@@ -581,7 +542,6 @@ function bindCustomInput(): void {
   const input = document.getElementById("customSentenceInput") as HTMLTextAreaElement | null;
   const analyzeButton = document.getElementById("analyzeCustomSentenceButton");
   const resetButton = document.getElementById("resetExampleButton");
-
   if (!input) return;
 
   input.value = localStorage.getItem(customInputStorageKey) || defaultSentence;
