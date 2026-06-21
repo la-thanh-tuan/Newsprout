@@ -27,13 +27,10 @@
     .hidden-layer { color: #9ca3af; background: transparent !important; border-bottom: none !important; }
     .tooltip { display: none; position: absolute; z-index: 50; left: 0; top: 110%; min-width: 260px; max-width: 360px; background: #111827; color: #fff; padding: 10px 12px; border-radius: 10px; font-size: 14px; line-height: 1.5; box-shadow: 0 12px 30px rgba(0,0,0,.18); }
     .hl:hover .tooltip { display: block; }
-    .legend { margin-top: 20px; padding-top: 16px; border-top: 1px solid #e5e7eb; }
-    .legend h3 { margin: 0 0 12px; font-size: 18px; }
-    .legend-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-    .legend-item { display: flex; gap: 10px; align-items: flex-start; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px; }
-    .legend-swatch { width: 28px; height: 22px; border-radius: 6px; flex: 0 0 auto; margin-top: 2px; }
-    .legend-title { font-weight: 700; display: block; }
-    .legend-desc { color: #4b5563; font-size: 14px; }
+    .legend { margin-top: 14px; padding-top: 10px; border-top: 1px solid #e5e7eb; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; color: #374151; }
+    .legend-title-main { font-weight: 700; margin-right: 2px; }
+    .legend-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border: 1px solid #e5e7eb; border-radius: 999px; background: #fff; line-height: 1.2; }
+    .legend-swatch { width: 14px; height: 14px; border-radius: 4px; flex: 0 0 auto; }
     .legend-subject { background: #dbeafe; border-bottom: 3px solid #2563eb; }
     .legend-verb { background: #dcfce7; border-bottom: 3px solid #16a34a; }
     .legend-object { background: #fef3c7; border-bottom: 3px solid #d97706; }
@@ -52,7 +49,7 @@
     table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 15px; }
     th, td { border: 1px solid #e5e7eb; padding: 10px; text-align: left; vertical-align: top; }
     th { background: #f3f4f6; }
-    @media (max-width: 768px) { .sentence { font-size: 18px; } .explanation-grid, .legend-grid { grid-template-columns: 1fr; } .tooltip { position: static; display: block; margin-top: 6px; } }
+    @media (max-width: 768px) { .sentence { font-size: 18px; } .explanation-grid { grid-template-columns: 1fr; } .tooltip { position: static; display: block; margin-top: 6px; } }
   </style>
 </head>
 <body>
@@ -83,16 +80,14 @@
       </p>
 
       <div class="legend" aria-label="Chú giải màu sắc">
-        <h3>Chú giải màu sắc</h3>
-        <div class="legend-grid">
-          <div class="legend-item"><span class="legend-swatch legend-subject"></span><div><span class="legend-title">Xanh dương: Chủ ngữ chính</span><span class="legend-desc">Nhận diện “ai / cái gì” đang thực hiện hành động chính trong câu.</span></div></div>
-          <div class="legend-item"><span class="legend-swatch legend-verb"></span><div><span class="legend-title">Xanh lá: Động từ chính</span><span class="legend-desc">Nhận diện hành động trung tâm, thường là nơi bám để tìm câu lõi.</span></div></div>
-          <div class="legend-item"><span class="legend-swatch legend-object"></span><div><span class="legend-title">Vàng: Tân ngữ / đối tượng chính</span><span class="legend-desc">Nhận diện cái được tác động hoặc được nói tới bởi động từ chính.</span></div></div>
-          <div class="legend-item"><span class="legend-swatch legend-modifier"></span><div><span class="legend-title">Xám: Cụm bổ nghĩa</span><span class="legend-desc">Bổ sung thông tin cho danh từ, động từ hoặc toàn câu; thường có thể bỏ tạm khi tìm câu lõi.</span></div></div>
-          <div class="legend-item"><span class="legend-swatch legend-manner"></span><div><span class="legend-title">Tím: Cách thức / sắc thái</span><span class="legend-desc">Cho biết hành động được thực hiện theo cách nào hoặc với mức độ nào.</span></div></div>
-          <div class="legend-item"><span class="legend-swatch legend-range"></span><div><span class="legend-title">Đỏ nhạt: Phạm vi bao quát</span><span class="legend-desc">Đánh dấu cấu trúc liệt kê, phạm vi “from... to...”, hoặc phần mở rộng nội dung.</span></div></div>
-          <div class="legend-item"><span class="legend-swatch legend-term"></span><div><span class="legend-title">Xanh cyan: Thuật ngữ / nội hàm</span><span class="legend-desc">Đánh dấu các khái niệm cần giải thích sâu theo lĩnh vực chính trị, học thuật hoặc chính sách.</span></div></div>
-        </div>
+        <span class="legend-title-main">Màu:</span>
+        <span class="legend-chip"><span class="legend-swatch legend-subject"></span>Chủ ngữ</span>
+        <span class="legend-chip"><span class="legend-swatch legend-verb"></span>Động từ</span>
+        <span class="legend-chip"><span class="legend-swatch legend-object"></span>Tân ngữ</span>
+        <span class="legend-chip"><span class="legend-swatch legend-modifier"></span>Bổ nghĩa</span>
+        <span class="legend-chip"><span class="legend-swatch legend-manner"></span>Cách thức</span>
+        <span class="legend-chip"><span class="legend-swatch legend-range"></span>Phạm vi</span>
+        <span class="legend-chip"><span class="legend-swatch legend-term"></span>Thuật ngữ</span>
       </div>
     </div>
 
