@@ -10,7 +10,16 @@ type DetectedStructuralRelation = {
   readingNote: string;
 };
 
+type CssHighlightRegistry = {
+  set(name: string, highlight: unknown): void;
+  delete(name: string): boolean;
+};
+
+type HighlightConstructor = new (...ranges: Range[]) => unknown;
+
 const semanticTermVisibilityStorageKey = "semanticLayer.showSemanticTerms";
+const semanticTermHighlightName = "semantic-terms";
+const semanticTerms = ["development model", "new era"];
 
 const currentStructuralRelation: DetectedStructuralRelation = {
   type: "prepositional-range",
@@ -167,6 +176,8 @@ function updateHighlightVisibility(layer: LayerNumber): void {
     const minLayer = Number(item.dataset.minLayer ?? "1");
     item.classList.toggle("hidden-layer", minLayer > layer);
   });
+
+  applySemanticTermHighlight(getSavedSemanticTermVisibility());
 }
 
 function resolveLayerContent(layer: LayerNumber): string {
@@ -201,9 +212,14 @@ function injectSemanticTermStyles(): void {
   const style = document.createElement("style");
   style.id = "semanticTermStyles";
   style.textContent = `
-    .semantic-term { background: #ecfeff; border-bottom: 3px dotted #0891b2; border-radius: 4px; padding: 0 2px; }
-    body:not(.semantic-terms-visible) .semantic-term { background: transparent !important; border-bottom: none !important; padding: 0 !important; }
-    .hidden-layer .semantic-term { background: transparent !important; border-bottom: none !important; }
+    ::highlight(semantic-terms) {
+      background-color: #ecfeff;
+      text-decoration-line: underline;
+      text-decoration-style: dotted;
+      text-decoration-thickness: 3px;
+      text-decoration-color: #0891b2;
+      text-underline-offset: 3px;
+    }
     .legend-semantic-term { background: #ecfeff; border-bottom: 3px dotted #0891b2; }
     body:not(.semantic-terms-visible) .legend-semantic-term-chip { display: none; }
     .semantic-term-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 999px; background: #fff; font-size: 14px; cursor: pointer; }
@@ -212,13 +228,78 @@ function injectSemanticTermStyles(): void {
   document.head.appendChild(style);
 }
 
+function getCssHighlightRegistry(): CssHighlightRegistry | null {
+  const cssWithHighlights = CSS as typeof CSS & { highlights?: CssHighlightRegistry };
+  return cssWithHighlights.highlights ?? null;
+}
+
+function createCssHighlight(ranges: Range[]): unknown | null {
+  const windowWithHighlight = window as typeof window & { Highlight?: HighlightConstructor };
+  return windowWithHighlight.Highlight ? new windowWithHighlight.Highlight(...ranges) : null;
+}
+
 function getSavedSemanticTermVisibility(): boolean {
   return localStorage.getItem(semanticTermVisibilityStorageKey) === "true";
 }
 
-function setSemanticTermVisibility(isVisible: boolean): void {
+function collectTermRanges(root: HTMLElement, terms: string[]): Range[] {
+  const ranges: Range[] = [];
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      const parent = node.parentElement;
+      if (!node.textContent?.trim()) return NodeFilter.FILTER_REJECT;
+      if (parent?.closest(".tooltip")) return NodeFilter.FILTER_REJECT;
+      if (parent?.closest(".hidden-layer")) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+
+  let currentNode = walker.nextNode();
+  while (currentNode) {
+    const textNode = currentNode as Text;
+    const text = textNode.textContent ?? "";
+
+    terms.forEach((term) => {
+      let startIndex = 0;
+      let matchIndex = text.indexOf(term, startIndex);
+
+      while (matchIndex !== -1) {
+        const range = document.createRange();
+        range.setStart(textNode, matchIndex);
+        range.setEnd(textNode, matchIndex + term.length);
+        ranges.push(range);
+
+        startIndex = matchIndex + term.length;
+        matchIndex = text.indexOf(term, startIndex);
+      }
+    });
+
+    currentNode = walker.nextNode();
+  }
+
+  return ranges;
+}
+
+function applySemanticTermHighlight(isVisible: boolean): void {
   document.body.classList.toggle("semantic-terms-visible", isVisible);
+
+  const registry = getCssHighlightRegistry();
+  if (!registry) return;
+
+  registry.delete(semanticTermHighlightName);
+  if (!isVisible) return;
+
+  const sentence = document.getElementById("sentence");
+  if (!sentence) return;
+
+  const ranges = collectTermRanges(sentence, semanticTerms);
+  const highlight = createCssHighlight(ranges);
+  if (highlight) registry.set(semanticTermHighlightName, highlight);
+}
+
+function setSemanticTermVisibility(isVisible: boolean): void {
   localStorage.setItem(semanticTermVisibilityStorageKey, String(isVisible));
+  applySemanticTermHighlight(isVisible);
 }
 
 function addSemanticTermToggle(): void {
@@ -233,38 +314,9 @@ function addSemanticTermToggle(): void {
   if (!input) return;
 
   input.checked = getSavedSemanticTermVisibility();
-  setSemanticTermVisibility(input.checked);
   input.addEventListener("change", () => setSemanticTermVisibility(input.checked));
 
   controls.appendChild(label);
-}
-
-function wrapDirectTextTerm(container: HTMLElement, term: string): void {
-  const textNode = Array.from(container.childNodes).find((node) => node.nodeType === Node.TEXT_NODE && node.textContent?.includes(term));
-  if (!textNode?.textContent || !textNode.parentNode) return;
-
-  const parts = textNode.textContent.split(term);
-  if (parts.length < 2) return;
-
-  const fragment = document.createDocumentFragment();
-  parts.forEach((part, index) => {
-    if (part) fragment.appendChild(document.createTextNode(part));
-    if (index < parts.length - 1) {
-      const marker = document.createElement("span");
-      marker.className = "semantic-term";
-      marker.textContent = term;
-      fragment.appendChild(marker);
-    }
-  });
-
-  textNode.parentNode.replaceChild(fragment, textNode);
-}
-
-function markSemanticTerms(): void {
-  document.querySelectorAll<HTMLElement>(".hl.modifier").forEach((item) => {
-    wrapDirectTextTerm(item, "development model");
-    wrapDirectTextTerm(item, "new era");
-  });
 }
 
 function addSemanticTermLegend(): void {
@@ -277,11 +329,11 @@ function addSemanticTermLegend(): void {
   legend.appendChild(chip);
 }
 
-function applySemanticTermMarkers(): void {
+function applySemanticTermControls(): void {
   injectSemanticTermStyles();
-  markSemanticTerms();
   addSemanticTermLegend();
   addSemanticTermToggle();
+  applySemanticTermHighlight(getSavedSemanticTermVisibility());
 }
 
 function renderPatternTags<T extends string>(types: T[], getPattern: (type: T) => LayerPattern<T>): string {
@@ -334,6 +386,6 @@ function bindAnalysisControls(): void {
 window.addEventListener("DOMContentLoaded", () => {
   bindLayerButtons();
   bindAnalysisControls();
-  applySemanticTermMarkers();
+  applySemanticTermControls();
   setLayer(1);
 });
