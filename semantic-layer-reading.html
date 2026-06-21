@@ -11,11 +11,13 @@
     h1 { margin-bottom: 8px; font-size: 28px; }
     .subtitle { color: #6b7280; margin-bottom: 24px; }
     .panel { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04); }
-    .sentence { font-size: 22px; line-height: 1.9; }
-    .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .sentence { font-size: 22px; line-height: 1.9; white-space: pre-wrap; }
+    .controls, .input-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
     button { border: 1px solid #d1d5db; background: #fff; color: #111827; padding: 9px 14px; border-radius: 999px; cursor: pointer; font-size: 14px; }
     button:hover { background: #f3f4f6; }
-    button.active { background: #111827; color: #fff; border-color: #111827; }
+    button.active, button.primary { background: #111827; color: #fff; border-color: #111827; }
+    textarea { width: 100%; min-height: 130px; resize: vertical; border: 1px solid #d1d5db; border-radius: 12px; padding: 14px; font: inherit; line-height: 1.6; background: #fff; }
+    .input-note { margin-top: 8px; color: #6b7280; font-size: 14px; }
     .hl { padding: 3px 5px; border-radius: 6px; position: relative; cursor: help; transition: all .2s ease; }
     .subject { background: #dbeafe; border-bottom: 3px solid #2563eb; }
     .verb { background: #dcfce7; border-bottom: 3px solid #16a34a; }
@@ -44,6 +46,8 @@
     .node { background: #fff; border: 1px solid #d1d5db; border-radius: 999px; padding: 8px 12px; }
     .arrow { color: #6b7280; }
     .final-meaning { font-size: 18px; background: #fefce8; border-left: 5px solid #eab308; padding: 16px; border-radius: 10px; }
+    .muted { color: #6b7280; }
+    .tag { display: inline-block; margin: 4px 6px 0 0; padding: 4px 8px; border-radius: 999px; background: #eef2ff; color: #3730a3; font-size: 13px; }
     small { color: #6b7280; }
     table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 15px; }
     th, td { border: 1px solid #e5e7eb; padding: 10px; text-align: left; vertical-align: top; }
@@ -57,10 +61,20 @@
 <body>
   <div class="container">
     <h1>Semantic Layer Highlighting</h1>
-    <p class="subtitle">Đọc hiểu câu dài theo nhiều tầng nghĩa: từ câu lõi → cụm bổ nghĩa → nội hàm chuyên sâu.</p>
+    <p class="subtitle">Đọc hiểu câu/đoạn tiếng Anh theo nhiều tầng nghĩa: từ câu lõi → cụm bổ nghĩa → nội hàm chuyên sâu.</p>
 
     <div class="panel">
-      <h2>Câu gốc</h2>
+      <h2>Nhập câu hoặc đoạn cần phân tích</h2>
+      <textarea id="customSentenceInput" aria-label="Nhập câu tiếng Anh cần phân tích"></textarea>
+      <p class="input-note">MVP hiện dùng rule-based detector, không gọi LLM. Kết quả tốt nhất với câu nghị luận/chính sách có cấu trúc rõ.</p>
+      <div class="input-actions">
+        <button class="primary" type="button" id="analyzeCustomSentenceButton">Phân tích</button>
+        <button type="button" id="resetExampleButton">Dùng câu mẫu</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Kết quả highlight</h2>
       <div class="controls">
         <button class="active" type="button" data-layer="1">Layer 1: Câu lõi</button>
         <button type="button" data-layer="2">Layer 2: Cụm bổ nghĩa</button>
@@ -70,16 +84,7 @@
         <button type="button" data-layer="6">Layer 6: Hoàn chỉnh</button>
       </div>
 
-      <p class="sentence" id="sentence">
-        <span class="hl subject" data-min-layer="1">The documents<span class="tooltip">Chủ ngữ chính: “Các văn kiện”.<span class="synonyms"><strong>Gần nghĩa:</strong> the official papers; the congress documents; the policy documents.</span></span></span>
-        <span class="hl modifier" data-min-layer="2">from the 14th National Party Congress<span class="tooltip">Cụm bổ nghĩa nguồn gốc cho “documents”: văn kiện từ Đại hội Đảng toàn quốc lần thứ 14.<span class="synonyms"><strong>Gần nghĩa:</strong> issued by the 14th National Party Congress; adopted at the 14th National Party Congress.</span></span></span>
-        <span class="hl verb" data-min-layer="1">began to define<span class="tooltip">Động từ chính: “bắt đầu xác định / bước đầu định hình”.<span class="synonyms"><strong>Gần nghĩa:</strong> started to outline; began to shape; set out to identify.</span></span></span>,
-        <span class="hl modifier" data-min-layer="2">in relatively comprehensive terms<span class="tooltip">Cụm bổ nghĩa cách thức/mức độ cho “define”: xác định một cách tương đối toàn diện.<span class="synonyms"><strong>Gần nghĩa:</strong> in a fairly comprehensive manner; with broad coverage; in quite comprehensive terms.</span></span></span>,
-        <span class="hl object" data-min-layer="1">the core components<span class="tooltip">Tân ngữ chính: “các thành tố cốt lõi”.<span class="synonyms"><strong>Gần nghĩa:</strong> the key elements; the essential components; the fundamental parts.</span></span></span>
-        <span class="hl modifier" data-min-layer="3">of Vietnam’s development model<span class="tooltip">Về ngữ pháp: cụm bổ nghĩa cho “core components”. Về ngữ nghĩa: “development model” là thuật ngữ lĩnh vực phát triển/chính sách.<span class="synonyms"><strong>Gần nghĩa:</strong> of Vietnam’s growth model; of Vietnam’s development framework; of Vietnam’s model for development.</span></span></span>
-        <span class="hl modifier" data-min-layer="3">in the new era<span class="tooltip">Về ngữ pháp: cụm bổ nghĩa bối cảnh thời đại. Về ngữ nghĩa: “new era” là khái niệm bối cảnh/chính luận.<span class="synonyms"><strong>Gần nghĩa:</strong> in the new period; in the new phase; in the new stage of development.</span></span></span>,
-        <span class="hl range" data-min-layer="4">from the development context, objectives, perspectives, and operational mechanisms to key tasks and strategic breakthroughs<span class="tooltip">Subtype: <strong>prepositional phrase</strong> / cụm giới từ chỉ phạm vi. Pattern: <strong>from A to B</strong>.<span class="synonyms"><strong>Gần nghĩa:</strong> ranging from... to...; covering... through...; spanning... and...</span></span></span>.
-      </p>
+      <p class="sentence" id="sentence"></p>
 
       <div class="legend" aria-label="Chú giải màu sắc">
         <span class="legend-title-main">Màu:</span>
@@ -96,16 +101,8 @@
     <div class="panel">
       <h2>Bảng vai trò ngôn ngữ</h2>
       <table>
-        <thead><tr><th>Thành phần</th><th>Vai trò</th><th>Cách hiểu</th><th>Cách dùng gần nghĩa</th></tr></thead>
-        <tbody>
-          <tr><td>The documents</td><td>Subject / Chủ ngữ</td><td>Các văn kiện</td><td>the official papers; the congress documents; the policy documents</td></tr>
-          <tr><td>began to define</td><td>Main verb / Động từ chính</td><td>Bắt đầu xác định, bước đầu định hình</td><td>started to outline; began to shape; set out to identify</td></tr>
-          <tr><td>the core components</td><td>Object / Tân ngữ</td><td>Các thành tố cốt lõi</td><td>the key elements; the essential components; the fundamental parts</td></tr>
-          <tr><td>in relatively comprehensive terms</td><td>Modifier subtype: Manner / Cách thức, mức độ</td><td>Một cách tương đối toàn diện</td><td>in a fairly comprehensive manner; with broad coverage; in quite comprehensive terms</td></tr>
-          <tr><td>of Vietnam’s development model</td><td>Modifier + semantic term inside</td><td>Cụm bổ nghĩa cho “core components”; bên trong có thuật ngữ “development model”</td><td>of Vietnam’s growth model; of Vietnam’s development framework; of Vietnam’s model for development</td></tr>
-          <tr><td>in the new era</td><td>Modifier + contextual concept inside</td><td>Cụm bổ nghĩa bối cảnh; bên trong có khái niệm “new era”</td><td>in the new period; in the new phase; in the new stage of development</td></tr>
-          <tr><td>from... to...</td><td>Structural relation subtype: Prepositional phrase / Cụm giới từ chỉ phạm vi</td><td>Từ bối cảnh, mục tiêu, quan điểm, cơ chế đến nhiệm vụ và đột phá chiến lược</td><td>ranging from... to...; covering... through...; spanning... and...</td></tr>
-        </tbody>
+        <thead><tr><th>Thành phần</th><th>Vai trò</th><th>Subtype</th><th>Cách hiểu</th></tr></thead>
+        <tbody id="roleTableBody"></tbody>
       </table>
     </div>
   </div>
